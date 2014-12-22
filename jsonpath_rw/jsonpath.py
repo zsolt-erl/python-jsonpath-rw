@@ -89,6 +89,9 @@ class DatumInContext(object):
     def full_path(self):
         return self.path if self.context is None else self.context.full_path.child(self.path)
 
+    def patch_path(self):
+        return self.path.patch_path() if self.context is None else self.context.patch_path() + self.path.patch_path()
+
     @property
     def id_pseudopath(self):
         """
@@ -180,6 +183,9 @@ class Root(JSONPath):
     def __str__(self):
         return '$'
 
+    def patch_path(self):
+        return ''
+
     def __repr__(self):
         return 'Root()'
 
@@ -199,6 +205,9 @@ class This(JSONPath):
 
     def __str__(self):
         return '`this`'
+
+    def patch_path(self):
+        return ''
 
     def __repr__(self):
         return 'This()'
@@ -272,7 +281,7 @@ class Where(JSONPath):
         self.right = right
 
     def find(self, data):
-        return [subdata for subdata in self.left.find(data) if self.right.find(subdata)]
+        return [subdata for subdata in self.left.find(data) if self.right.find(data)]
 
     def __str__(self):
         return '%s where %s' % (self.left, self.right)
@@ -416,7 +425,10 @@ class Fields(JSONPath):
                  if field_datum is not None]
 
     def __str__(self):
-        return ','.join(map(str, self.fields))
+        return ','.join(self.fields)
+
+    def patch_path(self):
+        return '/'+'/'.join(self.fields)
 
     def __repr__(self):
         return '%s(%s)' % (self.__class__.__name__, ','.join(map(repr, self.fields)))
@@ -450,6 +462,9 @@ class Index(JSONPath):
 
     def __str__(self):
         return '[%i]' % self.index
+
+    def patch_path(self):
+        return '/%i' % self.index
 
 class Slice(JSONPath):
     """
